@@ -71,7 +71,6 @@ class LinearProgress extends React.Component {
     return this.state.classNames.join(' ');
   }
   linearProgressCreate() {
-    console.log('CREATE');
     this.linearProgressFoundation = linearProgressFoundation({
       elementBufferBar: this.bufferBar,
       elementPrimaryBar: this.primaryBar,
