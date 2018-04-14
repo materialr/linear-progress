@@ -4,4 +4,4 @@ services:
     build: "."
     container_name: "materialr-linear-progress"
     volumes:
-      - ./:/app
+      - ./:/home/node/app
