@@ -1,10 +1,10 @@
+import * as linearProgress from '@material/linear-progress';
 import { mount, shallow } from 'enzyme';
 import React from 'react';
 
-import linearProgressFoundation from './foundation';
 import LinearProgress from './index';
 
-test('Adds the default classNames', () => {
+test('Renders the default classNames', () => {
   const wrapper = shallow(<LinearProgress />, { disableLifecycleMethods: true });
   const expected = 'mdc-linear-progress';
 
@@ -13,232 +13,124 @@ test('Adds the default classNames', () => {
   expect(actual).toBe(expected);
 });
 
-test('Adds classNames based on props', () => {
+test('Renders additional classNames from the \'className\' prop', () => {
   const CLASS_NAME = 'CLASS_NAME';
   const wrapper = shallow(
-    <LinearProgress className={CLASS_NAME} indeterminate reversed />,
+    <LinearProgress className={CLASS_NAME} />,
     { disableLifecycleMethods: true },
   );
-  const expected = 'mdc-linear-progress mdc-linear-progress--indeterminate ' +
-    `mdc-linear-progress--reversed ${CLASS_NAME}`;
+  const expected = `mdc-linear-progress ${CLASS_NAME}`;
 
   const actual = wrapper.props().className;
 
   expect(actual).toBe(expected);
 });
 
-test('Creates the foundation on mount', () => {
-  const linearProgressCreate = jest.fn();
-  const updateProgress = jest.fn();
-  const wrapper = shallow(<LinearProgress />, { disableLifecycleMethods: true });
-  const instance = wrapper.instance();
-  const expectedLinearProgressCreate = 1;
-  const expectedUpdateProgress = 1;
-  instance.linearProgressCreate = linearProgressCreate;
-  instance.updateProgress = updateProgress;
-  instance.componentDidMount();
+test('Renders an indeterminate progress bar', () => {
+  const wrapper = shallow(<LinearProgress indeterminate />, { disableLifecycleMethods: true });
+  const expected = 'mdc-linear-progress mdc-linear-progress--indeterminate';
 
-  const actualLinearProgressCreate = linearProgressCreate.mock.calls.length;
-  const actualUpdateProgress = updateProgress.mock.calls.length;
+  const actual = wrapper.props().className;
 
-  expect(actualLinearProgressCreate).toBe(expectedLinearProgressCreate);
-  expect(actualUpdateProgress).toBe(expectedUpdateProgress);
+  expect(actual).toBe(expected);
 });
 
-test('Updates progress when the buffer amount changes', () => {
-  const updateProgress = jest.fn();
-  const wrapper = shallow(<LinearProgress />, { disableLifecycleMethods: true });
-  const instance = wrapper.instance();
-  const expectedUpdateProgress = 1;
-  instance.updateProgress = updateProgress;
-  instance.componentDidUpdate({ buffer: 1, indeterminate: false, progress: 0, reversed: false });
+test('Renders an reversed progress bar', () => {
+  const wrapper = shallow(<LinearProgress reversed />, { disableLifecycleMethods: true });
+  const expected = 'mdc-linear-progress mdc-linear-progress--reversed';
 
-  const actualUpdateProgress = updateProgress.mock.calls.length;
+  const actual = wrapper.props().className;
 
-  expect(actualUpdateProgress).toBe(expectedUpdateProgress);
+  expect(actual).toBe(expected);
 });
 
-test('Updates progress when the progress amount changes', () => {
-  const updateProgress = jest.fn();
-  const wrapper = shallow(<LinearProgress />, { disableLifecycleMethods: true });
+test('Creates the MDCLinearProgress component on mount', () => {
+  const BUFFER = 10;
+  const PROGRESS = 10;
+  const implementation = { buffer: 0, progress: 0 };
+  const MDCLinearProgress = jest.fn();
+  MDCLinearProgress.mockImplementation(() => implementation);
+  linearProgress.MDCLinearProgress = MDCLinearProgress;
+  const wrapper = mount(<LinearProgress buffer={BUFFER} progress={PROGRESS} />);
   const instance = wrapper.instance();
-  const expectedUpdateProgress = 1;
-  instance.updateProgress = updateProgress;
-  instance.componentDidUpdate({ buffer: 0, indeterminate: false, progress: 1, reversed: false });
+  const expectedBuffer = BUFFER;
+  const expectedMDCProgress = instance.elementRoot;
+  const expectedProgress = PROGRESS;
 
-  const actualUpdateProgress = updateProgress.mock.calls.length;
+  const actualBuffer = implementation.buffer;
+  const actualMDCProgress = MDCLinearProgress.mock.calls[0][0];
+  const actualProgress = implementation.progress;
 
-  expect(actualUpdateProgress).toBe(expectedUpdateProgress);
+  expect(actualBuffer).toBe(expectedBuffer);
+  expect(actualMDCProgress).toBe(expectedMDCProgress);
+  expect(actualProgress).toBe(expectedProgress);
 });
 
-test('Updates determinate when the determinate value changes', () => {
-  const updateDeterminate = jest.fn();
-  const wrapper = shallow(<LinearProgress />, { disableLifecycleMethods: true });
-  const instance = wrapper.instance();
-  const expectedUpdateDeterminate = 1;
-  instance.updateDeterminate = updateDeterminate;
-  instance.componentDidUpdate({ buffer: 0, indeterminate: true, progress: 0, reversed: false });
-
-  const actualUpdateDeterminate = updateDeterminate.mock.calls.length;
-
-  expect(actualUpdateDeterminate).toBe(expectedUpdateDeterminate);
-});
-
-test('Updates reversed when the reversed value changes', () => {
-  const updateReversed = jest.fn();
-  const wrapper = shallow(<LinearProgress />, { disableLifecycleMethods: true });
-  const instance = wrapper.instance();
-  const expectedUpdateReversed = 1;
-  instance.updateReversed = updateReversed;
-  instance.componentDidUpdate({ buffer: 0, indeterminate: false, progress: 0, reversed: true });
-
-  const actualUpdateReversed = updateReversed.mock.calls.length;
-
-  expect(actualUpdateReversed).toBe(expectedUpdateReversed);
-});
-
-test('Destroys linear progress when the component unmounts', () => {
-  const linearProgressDestroy = jest.fn();
-  const wrapper = shallow(<LinearProgress />, { disableLifecycleMethods: true });
-  const instance = wrapper.instance();
-  const expectedLinearProgressDestroy = 1;
-  instance.linearProgressDestroy = linearProgressDestroy;
-  instance.componentWillUnmount();
-
-  const actualLinearProgressDestroy = linearProgressDestroy.mock.calls.length;
-
-  expect(actualLinearProgressDestroy).toBe(expectedLinearProgressDestroy);
-});
-
-test('Builds the proper linear progress foundation', () => {
+test('Destroys the MDCLinearProgress component on unmount', () => {
+  const destroy = jest.fn();
   const wrapper = mount(<LinearProgress />);
   const instance = wrapper.instance();
-  const expected = linearProgressFoundation({
-    elementBufferBar: instance.bufferBar,
-    elementPrimaryBar: instance.primaryBar,
-    propClassNames: instance.getClassNamesFromProps().split(' '),
-    updateClassNames: instance.updateClassNames,
-  });
-  expected.init();
+  const expected = 1;
+  instance.linearProgress.destroy = destroy;
 
-  instance.linearProgressCreate();
-  const actual = instance.linearProgressFoundation;
-
-  expect(JSON.stringify(actual)).toEqual(JSON.stringify(expected));
-});
-
-test('Properly destroys the linear progress foundation', () => {
-  const destroy = jest.fn();
-  const wrapper = shallow(<LinearProgress />, { disableLifecycleMethods: true });
-  const instance = wrapper.instance();
-  const expectedLinearProgress = undefined;
-  const expectedLinearProgressDestroy = 1;
-
-  instance.linearProgressCreate();
-  instance.linearProgressFoundation = { destroy };
-  instance.linearProgressDestroy();
-  const actualLinearProgress = instance.linearProgressFoundation;
-  const actualLinearProgressDestroy = destroy.mock.calls.length;
-
-  expect(actualLinearProgress).toBe(expectedLinearProgress);
-  expect(actualLinearProgressDestroy).toBe(expectedLinearProgressDestroy);
-});
-
-test('Updates classNames in state if the component is mounted', () => {
-  const CLASS_NAMES = ['CLASS_NAMES'];
-  const wrapper = shallow(<LinearProgress />, { disableLifecycleMethods: true });
-  const instance = wrapper.instance();
-  const expected = CLASS_NAMES;
-  instance.componentIsMounted = true;
-
-  instance.updateClassNames(CLASS_NAMES);
-  const actual = wrapper.state().classNames;
+  wrapper.unmount();
+  const actual = destroy.mock.calls.length;
 
   expect(actual).toBe(expected);
 });
 
-test('Does not update classNames if component is not mounted', () => {
-  const CLASS_NAMES = ['CLASS_NAMES'];
-  const wrapper = shallow(<LinearProgress />, { disableLifecycleMethods: true });
+test('Updates the buffer when the prop changes', () => {
+  const BUFFER = 10;
+  const implementation = { buffer: 0 };
+  const wrapper = mount(<LinearProgress buffer={0} />);
   const instance = wrapper.instance();
-  const expected = [];
-  instance.componentIsMounted = false;
+  instance.linearProgress = implementation;
+  const expected = BUFFER;
 
-  instance.updateClassNames(CLASS_NAMES);
-  const actual = wrapper.state().classNames;
-
-  expect(actual).toEqual(expected);
-});
-
-test('Updates the determinate value on the foundation correctly', () => {
-  const INDETERMINATE = true;
-  const setDeterminate = jest.fn();
-  const wrapper = shallow(
-    <LinearProgress indeterminate={INDETERMINATE} />,
-    { disableLifecycleMethods: true },
-  );
-  const instance = wrapper.instance();
-  const expected = !INDETERMINATE;
-  instance.linearProgressFoundation = { setDeterminate };
-
-  instance.updateDeterminate();
-  const actual = setDeterminate.mock.calls[0][0];
+  wrapper.setProps({ buffer: BUFFER });
+  const actual = implementation.buffer;
 
   expect(actual).toBe(expected);
 });
 
-test('Updates progress if determinate', () => {
-  const BUFFER = 100;
-  const PROGRESS = 100;
-  const setBuffer = jest.fn();
-  const setProgress = jest.fn();
-  const wrapper = shallow(
-    <LinearProgress buffer={BUFFER} indeterminate={false} progress={PROGRESS} />,
-    { disableLifecycleMethods: true },
-  );
+test('Does not update the buffer when the prop doesn\'t change', () => {
+  const BUFFER = 10;
+  const implementation = { buffer: BUFFER };
+  const wrapper = mount(<LinearProgress buffer={BUFFER} />);
   const instance = wrapper.instance();
-  const expectedSetBuffer = BUFFER;
-  const expectedSetProgress = PROGRESS;
-  instance.linearProgressFoundation = { setBuffer, setProgress };
+  instance.linearProgress = implementation;
+  const expected = BUFFER;
 
-  instance.updateProgress();
-  const actualSetBuffer = setBuffer.mock.calls[0][0];
-  const actualSetProgress = setBuffer.mock.calls[0][0];
+  wrapper.setProps({ buffer: BUFFER });
+  const actual = implementation.buffer;
 
-  expect(actualSetBuffer).toBe(expectedSetBuffer);
-  expect(actualSetProgress).toBe(expectedSetProgress);
+  expect(actual).toBe(expected);
 });
 
-test('Does not update progress if indeterminate', () => {
-  const setBuffer = jest.fn();
-  const setProgress = jest.fn();
-  const wrapper = shallow(<LinearProgress indeterminate />, { disableLifecycleMethods: true });
+test('Updates the progress when the prop changes', () => {
+  const PROGRESS = 10;
+  const implementation = { progress: 0 };
+  const wrapper = mount(<LinearProgress progress={0} />);
   const instance = wrapper.instance();
-  const expectedSetBuffer = 0;
-  const expectedSetProgress = 0;
-  instance.linearProgressFoundation = { setBuffer, setProgress };
+  instance.linearProgress = implementation;
+  const expected = PROGRESS;
 
-  instance.updateProgress();
-  const actualSetBuffer = setBuffer.mock.calls.length;
-  const actualSetProgress = setBuffer.mock.calls.length;
+  wrapper.setProps({ progress: PROGRESS });
+  const actual = implementation.progress;
 
-  expect(actualSetBuffer).toBe(expectedSetBuffer);
-  expect(actualSetProgress).toBe(expectedSetProgress);
+  expect(actual).toBe(expected);
 });
 
-test('Updates reversed correctly', () => {
-  const REVERSED = true;
-  const setReverse = jest.fn();
-  const wrapper = shallow(
-    <LinearProgress reversed={REVERSED} />,
-    { disableLifecycleMethods: true },
-  );
+test('Does not update the progress when the prop doesn\'t change', () => {
+  const PROGRESS = 10;
+  const implementation = { progress: PROGRESS };
+  const wrapper = mount(<LinearProgress progress={PROGRESS} />);
   const instance = wrapper.instance();
-  const expected = REVERSED;
-  instance.linearProgressFoundation = { setReverse };
+  instance.linearProgress = implementation;
+  const expected = PROGRESS;
 
-  instance.updateReversed();
-  const actual = setReverse.mock.calls[0][0];
+  wrapper.setProps({ progress: PROGRESS });
+  const actual = implementation.progress;
 
   expect(actual).toBe(expected);
 });
