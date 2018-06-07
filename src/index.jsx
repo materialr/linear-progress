@@ -46,12 +46,23 @@ class LinearProgress extends React.Component {
     this.linearProgress.progress = this.props.progress;
   }
   render() {
-    const { getClassNames } = this;
+    const {
+      getClassNames,
+      props: {
+        buffer,
+        className,
+        indeterminate,
+        progress,
+        reversed,
+        ...props
+      },
+    } = this;
     return (
       <div
         className={getClassNames()}
         ref={(elementRoot) => { this.elementRoot = elementRoot; }}
         role="progressbar"
+        {...props}
       >
         <div className="mdc-linear-progress__buffering-dots" />
         <div className="mdc-linear-progress__buffer" />
